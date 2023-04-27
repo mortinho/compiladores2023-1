@@ -39,12 +39,19 @@ def lexico(debug = False):
                 
             elif i[j] in (separators()):
                 if(bufferSize>0):
+                    if not buffer.isnumeric():
+                        if buffer[0].isnumeric():
+                            newBuffer = ""
+                            while buffer[0].isnumeric():
+                                newBuffer+=buffer[0]
+                                buffer=buffer[1:]
+                            tokens.append(Token(line,lastchar,newBuffer))
+                            lastchar+=len(newBuffer)
                     tokens.append(Token(line,lastchar,buffer))
                     buffer = ""
                     
                 if i[j] not in separator:
                     tokens.append(Token(line,char,i[j]))
-                #print(i[j])
                 
             elif i[j] not in separator:
                 buffer+=i[j]
@@ -72,7 +79,6 @@ def lexico(debug = False):
                 a = tokens[i-1]
                 b = tokens[i+1]
                 if a.column+len(a.value) == tokens[i].column == b.column -1:
-                    print (a)
                     a.value = a.value+"."+b.value
                     remove.append(i)
                     remove.append(i+1)

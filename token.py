@@ -39,7 +39,8 @@ symbols = {
            }
 
 separator = [
-            " "
+            ' ',
+            '\t'
             ]
     
 def separators():
@@ -59,10 +60,7 @@ class Token:
         elif(value.isnumeric()):
             self.id = "numeric"
         elif(value.isalnum()):
-            if value[0].isalpha():
                 self.id = "alphanumeric"
-            else:
-                self.id = "error"
         else:
             self.id = "error"
             print("unidentified token at line ",line," at the ",column," character")

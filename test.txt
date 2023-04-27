@@ -71,8 +71,9 @@ begin
 end
 
 begin
-	A:=TAM + 20;
-	testando := 10.20.30.40;
+	A:=12TAM2346 + 20;
+	@;
+	testando : = 10.20.30.40;
 	B := fatorial(A);
 	C := exp(A,B);
 	D := media(E);
