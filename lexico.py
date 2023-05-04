@@ -1,8 +1,9 @@
 
 from token import *
+import sintatico
 
-def lexico(debug = False):
-    with open('./test.txt', mode="r", encoding = "utf-8") as txt:
+def lexico(filepath, debug = False):
+    with open(filepath, mode="r", encoding = "utf-8") as txt:
         linecounter =  0
         linhas = []
         for i in txt:
@@ -92,4 +93,5 @@ def lexico(debug = False):
             
     return tokens
 
-lexico(True)
+
+sintatico.Sintatico(lexico('./test.txt'),debug=False)

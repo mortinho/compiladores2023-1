@@ -60,7 +60,7 @@ class Token:
         elif(value.isnumeric()):
             self.id = "numeric"
         elif(value.isalnum()):
-                self.id = "alphanumeric"
+            self.id = "alphanumeric"
         else:
             self.id = "error"
             print("unidentified token at line ",line," at the ",column," character")
@@ -68,3 +68,5 @@ class Token:
     def __str__(self):
         return str(self.line) + "," + str(self.column) + ": " + self.id + " " + self.value
         
+    def equals(self,input):
+        return (self.id==input or self.value==input)

@@ -1,4 +1,7 @@
 const TAM = 10;
+const tora = 20.5 + 19 / 10 *2;
+const ronaldo = "RONALDO";
+const ronaldo2 = ronaldo.ronaldo.nome.cpf[a];
 type vetor = array [15] of integer;
 type aluno = record
 		nota1 : real;
@@ -71,11 +74,12 @@ begin
 end
 
 begin
-	A:=12TAM2346 + 20;
-	@;
-	testando : = 10.20.30.40;
+	A:=TAM[10] + 20;
+	testando := 10.20;
 	B := fatorial(A);
 	C := exp(A,B);
+	g := fatorial(ronaldo);
+	a := g;
 	D := media(E);
 	F := lerDados()
 end
