@@ -94,4 +94,4 @@ def lexico(filepath, debug = False):
     return tokens
 
 
-sintatico.Sintatico(lexico('./test.txt'),debug=False)
+sintatico.Sintatico(lexico('./test.txt'),debug=True)

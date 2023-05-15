@@ -81,5 +81,6 @@ begin
 	g := fatorial(ronaldo);
 	a := g;
 	D := media(E);
+	F := lerDados();
 	F := lerDados()
 end

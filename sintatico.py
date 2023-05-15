@@ -1,4 +1,6 @@
 from token import *
+from tree import *
+import sys
 
 class Sintatico:
 
@@ -7,18 +9,23 @@ class Sintatico:
         self.error = False
         self.t=token
         self.debug = debug
-        self.programa()
+        self.sintTree = self.programa()
         print("end")
+        self.sintTree.print()
         
     def d(self,string):
         if self.debug: print(string)
         
     def treatFinal(self,input):
         self.d("treating: "+input+" -> "+str(self.t[self.a]))
-        if self.t[self.a].equals(input): self.a+=1
+        if self.t[self.a].equals(input):
+            f = self.t[self.a]
+            self.a+=1
+            return f
         else:
-            print("error "+input+" "+str(self.t[self.a]))
-            self.error=True
+            t = self.t[self.a]
+            print("error at "+str(t.line)+","+str(t.column)+": expected "+input+" but found "+t.id+": "+t.value )
+            sys.exit()
         
     def peek(self,input):
         self.d("peeking: "+input+" -> "+str(self.t[self.a]))
@@ -29,296 +36,353 @@ class Sintatico:
     
     def programa(self):
         self.d("[PROGRAMA]")
-        self.declaracoes()
-        self.principal()
+        tree = Tree("PROGRAMA")
+        tree.addChild(self.declaracoes())
+        tree.addChild(self.principal())
         self.d("[\\PROGRAMA]")
+        return tree
         
     def principal(self):
-        self.treatFinal("begin")
-        self.comando()
-        self.lista_com()
-        self.treatFinal("end")
+        self.d("[PRINCIPAL]")
+        tree = Tree("PRINCIPAL")
+        tree.addChild(self.treatFinal("begin"))
+        tree.addChild(self.comando())
+        tree.addChild(self.lista_com())
+        tree.addChild(self.treatFinal("end"))
+        self.d("[\\PRINCIPAL]")
+        return tree
         
     def declaracoes(self):
         self.d("[DECLARAÇÕES]")
-        self.def_const()
-        self.def_tipos()
-        self.def_var()
-        self.def_func()
+        tree = Tree("DECLARAÇÕES")
+        tree.addChild(self.def_const())
+        tree.addChild(self.def_tipos())
+        tree.addChild(self.def_var())
+        tree.addChild(self.def_func())
         self.d("[\\DECLARAÇÕES]")
+        return tree
         
     def def_const(self):
         self.d("[DEF_CONST]")
-        if (self.constante()): self.def_const()
+        tree = Tree("DEF_CONST")
+        if tree.addChild(self.constante()): 
+            tree.addChild(self.def_const())
         self.d("[\\DEF_CONST]")
+        return tree
         
     def constante(self):
         if not self.peek("const"): return False
         self.d("[CONSTANTE]")
-        self.treatFinal("const")
-        self.id()
-        self.treatFinal("equals")
-        self.const_valor()
-        self.treatFinal(";")
+        tree = Tree("CONSTANTE")
+        tree.addChild(self.treatFinal("const"))
+        tree.addChild(self.id())
+        tree.addChild(self.treatFinal("equals"))
+        tree.addChild(self.const_valor())
+        tree.addChild(self.treatFinal(";"))
         self.d("[\\CONSTANTE]")
-        return True
+        return tree
         
     def def_tipos(self):
         self.d("[DEF_TIPOS]")
-        if self.tipo(): self.def_tipos()
+        tree = Tree("DEF_TIPOS")
+        if tree.addChild(self.tipo()): 
+            tree.addChild(self.def_tipos())
         self.d("[\\DEF_TIPOS]")
+        return tree
         
     def tipo(self):
         if not self.peek("type"): return False
         self.d("[TIPO]")
-        self.treatFinal("type")
-        self.id()
-        self.treatFinal("=")
-        self.tipo_dado()
-        self.treatFinal(";")
+        tree = Tree("TIPO")
+        tree.addChild(self.treatFinal("type"))
+        tree.addChild(self.id())
+        tree.addChild(self.treatFinal("="))
+        tree.addChild(self.tipo_dado())
+        tree.addChild(self.treatFinal(";"))
         self.d("[\\TIPO]")
-        return  True
+        return  tree
         
     def def_var(self):
         self.d("[DEF_VAR]")
-        if self.variavel(): self.def_var()
+        tree = Tree("DEF_VAR")
+        if tree.addChild(self.variavel()):
+            tree.addChild(self.def_var())
         self.d("[\\DEF_VAR]")
+        return tree
         
     def variavel(self):
         if not self.peek("var"): return False
         self.d("[VARIAVEL]")
-        self.treatFinal("var")
-        self.id()
-        self.lista_id()
-        self.treatFinal(":")
-        self.tipo_dado()
-        self.treatFinal(";")
+        tree = Tree("VARIAVEL")
+        tree.addChild(self.treatFinal("var"))
+        tree.addChild(self.id())
+        tree.addChild(self.lista_id())
+        tree.addChild(self.treatFinal(":"))
+        tree.addChild(self.tipo_dado())
+        tree.addChild(self.treatFinal(";"))
         self.d("[\\VARIAVEL]")
-        return True
+        return tree
         
     def def_func(self):
         self.d("[DEF_FUNC]")
-        if self.funcao(): self.def_func()
+        tree = Tree("DEF_FUNC")
+        if tree.addChild(self.funcao()):
+            tree.addChild(self.def_func())
         self.d("[\\DEF_FUNC]")
+        return tree
         
     def funcao(self):
         if not self.peek("function"): return False
         self.d("[FUNCAO]")
-        self.treatFinal("function")
-        self.nome_funcao()
-        self.bloco_funcao()
+        tree = Tree("FUNCAO")
+        tree.addChild(self.treatFinal("function"))
+        tree.addChild(self.nome_funcao())
+        tree.addChild(self.bloco_funcao())
         self.d("[\\FUNCAO]")
-        return True
+        return tree
         
     def nome_funcao(self):
         self.d("[NOME_FUNCAO]")
-        self.id()
-        self.param_func()
-        self.treatFinal(":")
-        self.tipo_dado()
+        tree = Tree("NOME_FUNCAO")
+        tree.addChild(self.id())
+        tree.addChild(self.param_func())
+        tree.addChild(self.treatFinal(":"))
+        tree.addChild(self.tipo_dado())
         self.d("[\\NOME_FUNCAO]")
+        return tree
         
     def param_func(self):
         if not self.peek("("): return False
         self.d("[PARAM_FUNC]")
-        self.treatFinal("(")
-        self.campos()
-        self.treatFinal(")")
+        tree = Tree("PARAM_FUNC")
+        tree.addChild(self.treatFinal("("))
+        tree.addChild(self.campos())
+        tree.addChild(self.treatFinal(")"))
         self.d("[\\PARAM_FUNC]")
-        return True
+        return tree
         
     def bloco_funcao(self):
         self.d("[BLOCO_FUNCAO]")
-        self.def_var()
-        self.treatFinal("begin")
-        self.comando()
-        self.lista_com()
-        self.treatFinal("end")
+        tree = Tree("BLOCO_FUNCAO")
+        tree.addChild(self.def_var())
+        tree.addChild(self.treatFinal("begin"))
+        tree.addChild(self.comando())
+        tree.addChild(self.lista_com())
+        tree.addChild(self.treatFinal("end"))
         self.d("[\\BLOCO_FUNCAO]")
+        return tree
         
     def comando(self):
         self.d("[COMANDO]")
+        tree = Tree("COMANDO")
         if self.peek("while"):
-            self.treatFinal("while")
-            self.exp_logica()
-            self.bloco()
+            tree.addChild(self.treatFinal("while"))
+            tree.addChild(self.exp_logica())
+            tree.addChild(self.bloco())
         elif self.peek("if"):
-            self.treatFinal("if")
-            self.exp_logica()
-            self.treatFinal("then")
-            self.bloco()
-            self.elseB()            
+            tree.addChild(self.treatFinal("if"))
+            tree.addChild(self.exp_logica())
+            tree.addChild(self.treatFinal("then"))
+            tree.addChild(self.bloco())
+            tree.addChild(self.elseB())
         elif self.peek("write"):
-            self.treatFinal("write")
-            self.const_valor()
+            tree.addChild(self.treatFinal("write"))
+            tree.addChild(self.const_valor())
         elif self.peek("read"):
-            self.treatFinal("read")
-            self.id()
-            self.nome()
+            tree.addChild(self.treatFinal("read"))
+            tree.addChild(self.id())
+            tree.addChild(self.nome())
         else:
-            self.id()
-            self.nome()
-            self.treatFinal(":=")
-            self.exp_mat()
+            tree.addChild(self.id())
+            tree.addChild(self.nome())
+            tree.addChild(self.treatFinal(":="))
+            tree.addChild(self.exp_mat())
         self.d("[\\COMANDO]")
+        return tree
         
     def lista_com(self):
         if not self.peek(";"): return False
         self.d("[LISTA_COM]")
-        self.treatFinal(";")
-        self.comando()
-        self.lista_com()
+        tree = Tree("LISTA_COM")
+        tree.addChild(self.treatFinal(";"))
+        tree.addChild(self.comando())
+        tree.addChild(self.lista_com())
         self.d("[\\LISTA_COM]")
+        return tree
         
     def bloco(self):
         self.d("[BLOCO]")
+        tree = Tree("BLOCO")
         if self.peek("begin"):
-            self.treatFinal("begin")
-            self.comando()
-            self.lista_com()
-            self.treatFinal("end")
-        else: self.comando()
+            tree.addChild(self.treatFinal("begin"))
+            tree.addChild(self.comando())
+            tree.addChild(self.lista_com())
+            tree.addChild(self.treatFinal("end"))
+        else: tree.addChild(self.comando())
         self.d("[\\BLOCO]")
+        return tree
         
     def elseB(self):
         if self.peek("else"):
             self.d("[ELSE]")
-            self.treatFinal("else")
-            self.bloco()
+            tree = Tree("ELSE")
+            tree.addChild(self.treatFinal("else"))
+            tree.addChild(self.bloco())
             self.d("[\\ELSE]")
-            return True
+            return tree
         else: return False
         
     def lista_param(self):
-        if self.parametro():
+        tree = Tree("LIST_PARAM")
+        if tree.addChild(self.parametro()):
             self.d("[LIST_PARAM]")
             if self.peek(","):
-                self.treatFinal(",")
-                self.lista_param()
+                tree.addChild(self.treatFinal(","))
+                tree.addChild(self.lista_param())
             self.d("[\\LIST_PARAM]")
-            return True
+            return tree
+        else: return False
             
     def exp_logica(self):
         self.d("[EXP_LOGICA]")
-        self.exp_mat()
-        if self.op_logico():
-            self.exp_logica()
+        tree = Tree("EXP_LOGICA")
+        tree.addChild(self.exp_mat())
+        if tree.addChild(self.op_logico()):
+            tree.addChild(self.exp_logica())
         self.d("[\\EXP_LOGICA]")
-            
+        return tree
+        
     def op_logico(self):
         self.d("[OP_LOGICO]")
+        tree = Tree("OP_LOGICO")
         ops = [ '>', '<', '=', '!']
         for op in ops:
             if self.peek(op):
-                self.treatFinal(op)
-                return True
+                tree.addChild(self.treatFinal(op))
+                return tree
         self.d("[\\OP_LOGICO]")
         return False
         
     def lista_id(self):
         if not self.peek(","): return False
         self.d("[LISTA_ID]")
-        self.treatFinal(",")
-        self.id()
-        self.lista_id()
+        tree = Tree("LISTA_ID")
+        tree.addChild(self.treatFinal(","))
+        tree.addChild(self.id())
+        tree.addChild(self.lista_id())
         self.d("[\\LISTA_ID]")
-        return True
+        return tree
     
     def tipo_dado(self):
         self.d("[TIPO_DADO]")
-        if self.peek("integer"): self.treatFinal("integer")
-        elif self.peek("real"): self.treatFinal("real")
-        elif self.peek("array"): 
-            self.treatFinal("array")
-            self.treatFinal("[")
-            self.numero()
-            self.treatFinal("]")
-            self.treatFinal("of")
-            self.tipo_dado()
+        tree = Tree("TIPO_DADO")
+        if self.peek("integer"): tree.addChild(self.treatFinal("integer"))
+        elif self.peek("real"): tree.addChild(self.treatFinal("real"))
+        elif self.peek("array"):
+            tree.addChild(self.treatFinal("array"))
+            tree.addChild(self.treatFinal("["))
+            tree.addChild(self.numero())
+            tree.addChild(self.treatFinal("]"))
+            tree.addChild(self.treatFinal("of"))
+            tree.addChild(self.tipo_dado())
         elif self.peek("record"):
-            self.treatFinal("record")
-            self.campos()
-            self.treatFinal("end")
-        else: self.id()
+            tree.addChild(self.treatFinal("record"))
+            tree.addChild(self.campos())
+            tree.addChild(self.treatFinal("end"))
+        else: tree.addChild(self.id())
         self.d("[\\TIPO_DADO]")
-    
+        return tree
+        
     def campos(self):
         self.d("[CAMPOS]")
-        self.id()
-        self.treatFinal(":")
-        self.tipo_dado()
-        self.lista_campos()
+        tree = Tree("CAMPOS")
+        tree.addChild(self.id())
+        tree.addChild(self.treatFinal(":"))
+        tree.addChild(self.tipo_dado())
+        tree.addChild(self.lista_campos())
         self.d("[\\CAMPOS]")
+        return tree
         
     def lista_campos(self):
         self.d("[LISTA_CAMPOS]")
         if(not self.peek(";")): return False
-        self.treatFinal(";")
-        self.campos()
-        self.lista_campos()
+        tree = Tree("LISTA_CAMPOS")
+        tree.addChild(self.treatFinal(";"))
+        tree.addChild(self.campos())
+        tree.addChild(self.lista_campos())
         self.d("[\\LISTA_CAMPOS]")
-        return True
+        return tree
      
     def numero(self):
         self.d("[NUMERO]")
+        tree = Tree("NUMERO")
         if(not self.peek("numeric")): return False
-        self.treatFinal("numeric")
+        tree.addChild(self.treatFinal("numeric"))
         self.d("[\\NUMERO]")
-        return True
+        return tree
         
     def id(self):
         self.d("[ID]")
+        tree = Tree("ID")
         if(not self.peek("alphanumeric")): return False
-        self.treatFinal("alphanumeric")
+        tree.addChild(self.treatFinal("alphanumeric"))
         self.d("[\\ID]")
-        return True
+        return tree
         
     def const_valor(self):
         self.d("[CONST_VALOR]")
-        if self.peek("const_valor"): self.treatFinal("const_valor")
-        else: self.exp_mat()
+        tree = Tree("CONST_VALOR")
+        if self.peek("const_valor"): tree.addChild(self.treatFinal("const_valor"))
+        else: tree.addChild(self.exp_mat())
         self.d("[\\CONST_VALOR]")
+        return tree
         
     def exp_mat(self):
         self.d("[EXP_MAT]")
-        self.parametro()
-        if self.op_mat():
-            self.exp_mat()
+        tree = Tree("EXP_MAT")
+        tree.addChild(self.parametro())
+        if tree.addChild(self.op_mat()):
+            tree.addChild(self.exp_mat())
         self.d("[\\EXP_MAT]")
+        return tree
         
     def parametro(self):
         self.d("[PARAMETRO]")
-        if self.numero():
-            return True
-        elif self.id():
-            self.nome()
-            return True
-        return False
-        self.d("[\\PARAMETRO]")
+        tree = Tree("PARAMETRO")
+        if tree.addChild(self.numero()):
+            return tree
+        elif tree.addChild(self.id()):
+            tree.addChild(self.nome())
+            return tree
+        else: return False
+        self.d("[\\PARAMETRO]") #????????
             
     def nome(self):
         self.d("[NOME]")
+        tree = Tree("NOME")
         if self.peek("."): 
-            self.treatFinal(".")
-            self.id()
-            self.nome()
+            tree.addChild(self.treatFinal("."))
+            tree.addChild(self.id())
+            tree.addChild(self.nome())
         elif self.peek("["):
-            self.treatFinal("[")
-            self.parametro()
-            self.treatFinal("]")
+            tree.addChild(self.treatFinal("["))
+            tree.addChild(self.parametro())
+            tree.addChild(self.treatFinal("]"))
         elif self.peek("("):
-            self.treatFinal("(")
-            self.lista_param()
-            self.treatFinal(")")
+            tree.addChild(self.treatFinal("("))
+            tree.addChild(self.lista_param())
+            tree.addChild(self.treatFinal(")"))
         self.d("[\\NOME]")
-            
+        return tree
+        
     def op_mat(self):
         self.d("[OP_MAT]")
+        tree = Tree("OP_MAT")
         ops = [ '+', '-', '*', '/']
         for op in ops:
             if self.peek(op):
-                self.treatFinal(op)
-                return True
+                tree.addChild(self.treatFinal(op))
+                return tree
         self.d("[\\OP_MAT]")
         return False
         
